@@ -68,6 +68,8 @@ last."
 
 (defun ssel--format-shell-buffer-name (buffer-name)
   "Do various magic on BUFFER-NAME to make it look good."
+  (when (or (not buffer-name) (string= buffer-name ""))
+    (setq buffer-name "*shell*"))
   (unless (string-match-p "\\`\\*.*?\\*\\'" buffer-name)
     (unless (string-match-p "shell" buffer-name)
       (setq buffer-name (format "%s-shell" buffer-name)))
