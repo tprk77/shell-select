@@ -95,10 +95,8 @@ looks kind of plain, the name will be prettified. Something like
           (shell-buffer-names (mapcar #'buffer-name
                                       (ssel--sort-shell-buffers
                                        (ssel--get-shell-buffers)))))
-      (message "Shells: %s" shell-buffer-names)
       (completing-read "Shell: " shell-buffer-names nil nil nil
                        'ssel--shell-history (car shell-buffer-names)))))
-  (message "Switch shell to %s" shell-buffer-or-name)
   (let ((shell-buffer (get-buffer shell-buffer-or-name)))
     ;; Make sure we really got a shell
     (unless (and shell-buffer (ssel--shell-buffer-p shell-buffer))
