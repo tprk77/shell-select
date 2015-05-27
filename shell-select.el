@@ -57,25 +57,28 @@ The shell buffers will be in the same order as the fundamental
 buffer list."
   (cl-remove-if-not #'ssel--shell-buffer-p (buffer-list frame)))
 
-(defun ssel--sort-shell-buffers (shell-buffers)
+(defun ssel--sort-shell-buffers (shell-buffers &optional use-current)
   "Sort the list of SHELL-BUFFERS for selection.
 
 Use the default ordering, which is the same as the fundamental
-buffer list, but if the current buffer is a shell, put that one
-last."
+buffer list, except if USE-CURRENT is nil, and the current buffer
+is a shell, then put the current shell last."
   (let ((current-buffer (current-buffer)))
-    (if (equal (car shell-buffers) current-buffer)
+    (if (and (equal (car shell-buffers) current-buffer) (not use-current))
         (append (delete current-buffer shell-buffers)
                 (list current-buffer))
       shell-buffers)))
 
-(defun ssel--interactive-get-shell ()
-  "Get a shell interactively."
+(defun ssel--interactive-get-shell (&optional use-current)
+  "Get a shell interactively.
+
+If USE-CURRENT is nil, put the current shell as the last completion."
   (let ((completing-read-function (or shell-select-completing-read-function
                                       completing-read-function))
         (shell-buffer-names (mapcar #'buffer-name
                                     (ssel--sort-shell-buffers
-                                     (ssel--get-shell-buffers)))))
+                                     (ssel--get-shell-buffers)
+                                     use-current))))
     (completing-read "Shell: " shell-buffer-names nil nil nil
                      'ssel--shell-history (car shell-buffer-names))))
 
@@ -124,7 +127,10 @@ NEW-NAME is the new name of the shell. If the new name of the
 shell looks kind of plain, the name will be prettified. Something
 like \"name\" will become \"*name-shell*\" by default."
   (interactive
-   (list (ssel--interactive-get-shell)
+   (list (let ((current-buffer (current-buffer)))
+           (if (and current-prefix-arg (ssel--shell-buffer-p current-buffer))
+               current-buffer
+             (ssel--interactive-get-shell t)))
          (read-string "Rename shell: " nil 'ssel--shell-rename-history)))
   (let ((shell-buffer (get-buffer shell-buffer-or-name)))
     ;; Make sure we really got a shell
