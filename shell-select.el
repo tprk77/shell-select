@@ -69,17 +69,19 @@ is a shell, then put the current shell last."
                 (list current-buffer))
       shell-buffers)))
 
-(defun ssel--interactive-get-shell (&optional use-current)
+(defun ssel--interactive-get-shell (&optional prompt use-current)
   "Get a shell interactively.
 
-If USE-CURRENT is nil, put the current shell as the last completion."
+PROMPT can be a string for the prompt. The default prompt is:
+\"Shell: \". If USE-CURRENT is nil, put the current shell as the
+last completion."
   (let ((completing-read-function (or shell-select-completing-read-function
                                       completing-read-function))
         (shell-buffer-names (mapcar #'buffer-name
                                     (ssel--sort-shell-buffers
                                      (ssel--get-shell-buffers)
                                      use-current))))
-    (completing-read "Shell: " shell-buffer-names nil nil nil
+    (completing-read (or prompt "Shell: ") shell-buffer-names nil nil nil
                      'ssel--shell-history (car shell-buffer-names))))
 
 (defun ssel--format-shell-buffer-name (buffer-name)
@@ -130,7 +132,7 @@ like \"name\" will become \"*name-shell*\" by default."
    (list (let ((current-buffer (current-buffer)))
            (if (and current-prefix-arg (ssel--shell-buffer-p current-buffer))
                current-buffer
-             (ssel--interactive-get-shell t)))
+             (ssel--interactive-get-shell "Shell to rename: " t)))
          (read-string "Rename shell: " nil 'ssel--shell-rename-history)))
   (let ((shell-buffer (get-buffer shell-buffer-or-name)))
     ;; Make sure we really got a shell
