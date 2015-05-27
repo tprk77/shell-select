@@ -141,6 +141,20 @@ like \"name\" will become \"*name-shell*\" by default."
     (with-current-buffer shell-buffer
       (rename-buffer (ssel--format-shell-buffer-name new-name) t))))
 
+;;;###autoload
+(defun shell-select-dwim (&optional do-rename)
+  "Select a shell, or rename a shell.
+
+If DO-RENAME is true, try to rename the current shell, or some
+other shell. Otherwise, just switch to a shell, or possibly
+create one."
+  (interactive (list (not (not current-prefix-arg))))
+  (if do-rename
+      (let ((prefix-arg t))
+        ;; Set prefix for this command, so it defaults to renaming the current shell
+        (call-interactively 'shell-select-rename-shell t))
+    (call-interactively 'shell-select-switch-shell t)))
+
 (provide 'shell-select)
 
 ;;; shell-select.el ends here
