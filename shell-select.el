@@ -39,7 +39,10 @@
   "Completing-read-function for shell selection.")
 
 (defvar ssel--shell-history nil
-  "The history for `completing-read' to get shells.")
+  "The history for getting shells.")
+
+(defvar ssel--shell-rename-history nil
+  "The history for renaming shells.")
 
 (defun ssel--shell-buffer-p (buffer-or-name)
   "Test if BUFFER-OR-NAME is a buffer running a shell."
@@ -66,6 +69,16 @@ last."
                 (list current-buffer))
       shell-buffers)))
 
+(defun ssel--interactive-get-shell ()
+  "Get a shell interactively."
+  (let ((completing-read-function (or shell-select-completing-read-function
+                                      completing-read-function))
+        (shell-buffer-names (mapcar #'buffer-name
+                                    (ssel--sort-shell-buffers
+                                     (ssel--get-shell-buffers)))))
+    (completing-read "Shell: " shell-buffer-names nil nil nil
+                     'ssel--shell-history (car shell-buffer-names))))
+
 (defun ssel--format-shell-buffer-name (buffer-name)
   "Do various magic on BUFFER-NAME to make it look good."
   (when (or (not buffer-name) (string= buffer-name ""))
@@ -89,14 +102,7 @@ shell doesn't exist, start one. If the name of the new shell
 looks kind of plain, the name will be prettified. Something like
 \"name\" will become \"*name-shell*\" by default."
   (interactive
-   (list
-    (let ((completing-read-function (or shell-select-completing-read-function
-                                        completing-read-function))
-          (shell-buffer-names (mapcar #'buffer-name
-                                      (ssel--sort-shell-buffers
-                                       (ssel--get-shell-buffers)))))
-      (completing-read "Shell: " shell-buffer-names nil nil nil
-                       'ssel--shell-history (car shell-buffer-names)))))
+   (list (ssel--interactive-get-shell)))
   (let ((shell-buffer (get-buffer shell-buffer-or-name)))
     ;; Make sure we really got a shell
     (unless (and shell-buffer (ssel--shell-buffer-p shell-buffer))
@@ -107,6 +113,25 @@ looks kind of plain, the name will be prettified. Something like
           ;; Didn't find anything, make a new shell
           (setq shell-buffer (ssel--make-shell shell-buffer-name)))))
     (switch-to-buffer shell-buffer)))
+
+;;;###autoload
+(defun shell-select-rename-shell (shell-buffer-or-name new-name)
+  "Rename a shell.
+
+SHELL-BUFFER-OR-NAME can be a buffer, or the name of one. The
+buffer must exist and be a shell, or else it is an error.
+NEW-NAME is the new name of the shell. If the new name of the
+shell looks kind of plain, the name will be prettified. Something
+like \"name\" will become \"*name-shell*\" by default."
+  (interactive
+   (list (ssel--interactive-get-shell)
+         (read-string "Rename shell: " nil 'ssel--shell-rename-history)))
+  (let ((shell-buffer (get-buffer shell-buffer-or-name)))
+    ;; Make sure we really got a shell
+    (unless (and shell-buffer (ssel--shell-buffer-p shell-buffer))
+      (error "No such shell, can't rename"))
+    (with-current-buffer shell-buffer
+      (rename-buffer (ssel--format-shell-buffer-name new-name) t))))
 
 (provide 'shell-select)
 
