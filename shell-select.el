@@ -119,6 +119,8 @@ looks kind of plain, the name will be prettified. Something like
           (setq shell-buffer (ssel--make-shell shell-buffer-name)))))
     (switch-to-buffer shell-buffer)))
 
+(put 'shell-select-switch-shell 'interactive-only t)
+
 ;;;###autoload
 (defun shell-select-rename-shell (shell-buffer-or-name new-name)
   "Rename a shell.
@@ -141,6 +143,8 @@ like \"name\" will become \"*name-shell*\" by default."
     (with-current-buffer shell-buffer
       (rename-buffer (ssel--format-shell-buffer-name new-name) t))))
 
+(put 'shell-select-rename-shell 'interactive-only t)
+
 ;;;###autoload
 (defun shell-select-dwim (&optional do-rename)
   "Select a shell, or rename a shell.
@@ -154,6 +158,8 @@ create one."
         ;; Set prefix for this command, so it defaults to renaming the current shell
         (call-interactively 'shell-select-rename-shell t))
     (call-interactively 'shell-select-switch-shell t)))
+
+(put 'shell-select-dwim 'interactive-only t)
 
 (provide 'shell-select)
 
